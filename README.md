@@ -39,7 +39,7 @@ Sua API deve conter funcionalidades que permitam:
 
 ## 💼 Regras de Negócio
 
-As regras de negócio detalhadas para este desafio estão disponíveis no arquivo [`business-rules.md`](./business-rules.md) localizado neste mesmo diretório.  
+As regras de negócio detalhadas para este desafio estão disponíveis no arquivo [`regradenegocio`](./regradenegocio) localizado neste mesmo diretório.  
 Consulte esse arquivo para entender todos os requisitos e restrições que sua solução deve atender.
 
 ---

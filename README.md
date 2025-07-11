@@ -35,8 +35,6 @@ Sua API deve conter funcionalidades que permitam:
 
 ---
 
-## 💸 Regras de Negócio
-
 ## 💼 Regras de Negócio
 
 As regras de negócio detalhadas para este desafio estão disponíveis no arquivo [`regradenegocio`](./regradenegocio) localizado neste mesmo diretório.  

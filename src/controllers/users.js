@@ -5,15 +5,8 @@ const { v4: uuidv4 } = require('uuid');
 const dbPath = path.join(__dirname, '../database/db.json');
 
 const createAccount = async (req, res) => {
-    const { userId, type } = req.body;
-
-    if (!userId || !type) {
-        return res.status(400).json({ mensagem: 'Preencha todos os campos.' });
-    }
-
-    if (type !== 'corrente' && type !== 'investimento') {
-        return res.status(400).json({ mensagem: 'Informe um tipo de conta válido.' });
-    }
+    const { userId } = req.params;
+    const { type } = req.body;
 
     try {
         const fileData = await fs.readFile(dbPath, 'utf8');

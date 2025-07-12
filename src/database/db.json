@@ -71,5 +71,18 @@
       "birthDate": "1996-06-08"
     }
   ],
-  "accounts": []
+  "accounts": [
+    {
+      "id": "5f7af05f-523e-4128-8645-d4410c78c5af",
+      "userId": "1",
+      "type": "corrente",
+      "balance": 5000
+    },
+    {
+      "id": "f3cf99d3-9731-4f68-af1f-59f9f565201e",
+      "userId": "2",
+      "type": "investimento",
+      "balance": 2000
+    }
+  ]
 }

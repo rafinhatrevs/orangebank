@@ -78,14 +78,6 @@ const transferExternal = async (req, res) => {
     const { value, receiverId, senderType, receiverType } = req.body;
 
     try {
-        if (senderType !== 'corrente' || receiverType !== 'corrente') {
-            return res.status(400).json({ mensagem: 'Transferências externas só são permitidas entre contas correntes.' });
-        }
-
-        if (userId === receiverId) {
-            return res.status(400).json({ mensagem: 'Para transferências internas use o endpoint apropriado.' });
-        }
-
         const fileData = await fs.readFile(dbPath, 'utf8');
         const data = JSON.parse(fileData);
 
@@ -104,7 +96,7 @@ const transferExternal = async (req, res) => {
             return res.status(400).json({ mensagem: 'Saldo insuficiente para transferência.' });
         }
 
-        const fee = 0;
+        const fee = value * 0.005;
         const total = value + fee;
 
         if (senderAccount.balance < total) {

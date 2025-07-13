@@ -1,5 +1,6 @@
 const fs = require('fs/promises');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 const { formatCurrency } = require('../utils/format');
 
 const dbPath = path.join(__dirname, '../database/db.json');
@@ -100,13 +101,53 @@ const transfer = async (req, res) => {
             return res.status(400).json({ mensagem: 'Saldo insuficiente para transferência.' });
         }
 
-        senderAccount.balance -= value;
+        let transferType = senderAccount.userId === receiverAccount.userId ? 'transferência interna' : 'transferência externa';
+
+        let fee = 0;
+
+        if (transferType === 'transferência externa') {
+            fee = value * 0.005;
+
+            const total = value + fee;
+
+            if (senderAccount.balance < total) {
+                return res.status(400).json({ mensagem: 'Saldo insuficiente para transferência.' });
+            }
+
+            senderAccount.balance -= total;
+
+        } else {
+            senderAccount.balance -= value;
+        }
+
         receiverAccount.balance += value;
+
+        const transaction = {
+            id: uuidv4(),
+            date: new Date().toISOString(),
+            value,
+            tax: fee,
+            from: {
+                userId: senderAccount.userId,
+                accountId: senderAccount.id,
+                type: senderAccount.type
+            },
+            to: {
+                userId: receiverAccount.userId,
+                accountId: receiverAccount.id,
+                type: receiverAccount.type
+            },
+            type: transferType
+        };
+
+        data.transactions.push(transaction);
 
         await fs.writeFile(dbPath, JSON.stringify(data, null, 2));
 
         return res.status(200).json({
             mensagem: `Transferência de ${formatCurrency(value)} realizada com sucesso.`,
+            tipo: transferType,
+            taxa: formatCurrency(fee),
             saldo: formatCurrency(senderAccount.balance)
         });
 

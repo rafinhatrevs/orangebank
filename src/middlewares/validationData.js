@@ -47,7 +47,9 @@ const transferData = (req, res, next) => {
         return res.status(400).json({ mensagem: 'Preencha todos os campos.' });
     }
 
-    if (value <= 0) {
+    const numericValue = Number(value);
+
+    if (isNaN(numericValue) || numericValue <= 0) {
         return res.status(400).json({ mensagem: 'Informe um valor válido.' });
     }
 
@@ -58,6 +60,8 @@ const transferData = (req, res, next) => {
     if (receiverType !== 'corrente' && receiverType !== 'investimento') {
         return res.status(400).json({ mensagem: 'Informe um tipo de conta de destino válido.' });
     }
+
+    req.body.value = numericValue;
 
     next();
 };

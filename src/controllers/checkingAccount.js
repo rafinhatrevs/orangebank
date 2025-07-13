@@ -73,53 +73,45 @@ const withdrawal = async (req, res) => {
     }
 };
 
-const transfer = async (req, res) => {
+const transferExternal = async (req, res) => {
     const { userId } = req.params;
     const { value, receiverId, senderType, receiverType } = req.body;
 
     try {
+        if (senderType !== 'corrente' || receiverType !== 'corrente') {
+            return res.status(400).json({ mensagem: 'Transferências externas só são permitidas entre contas correntes.' });
+        }
+
+        if (userId === receiverId) {
+            return res.status(400).json({ mensagem: 'Para transferências internas use o endpoint apropriado.' });
+        }
+
         const fileData = await fs.readFile(dbPath, 'utf8');
         const data = JSON.parse(fileData);
 
         const senderAccount = data.accounts.find((acc) => acc.userId === userId && acc.type === senderType);
+        const receiverAccount = data.accounts.find((acc) => acc.userId === receiverId && acc.type === receiverType);
 
         if (!senderAccount) {
             return res.status(404).json({ mensagem: 'Conta de origem não encontrada.' });
         }
 
-        const receiverAccount = data.accounts.find((acc) => acc.userId === receiverId && acc.type === receiverType);
-
         if (!receiverAccount) {
             return res.status(404).json({ mensagem: 'Conta de destino não encontrada.' });
-        }
-
-        if (senderAccount.type === 'investimento' && receiverAccount.type === 'investimento') {
-            return res.status(400).json({ mensagem: 'Transferências entre contas de investimento não são permitidas.' });
         }
 
         if (senderAccount.balance < value) {
             return res.status(400).json({ mensagem: 'Saldo insuficiente para transferência.' });
         }
 
-        let transferType = senderAccount.userId === receiverAccount.userId ? 'transferência interna' : 'transferência externa';
+        const fee = 0;
+        const total = value + fee;
 
-        let fee = 0;
-
-        if (transferType === 'transferência externa') {
-            fee = value * 0.005;
-
-            const total = value + fee;
-
-            if (senderAccount.balance < total) {
-                return res.status(400).json({ mensagem: 'Saldo insuficiente para transferência.' });
-            }
-
-            senderAccount.balance -= total;
-
-        } else {
-            senderAccount.balance -= value;
+        if (senderAccount.balance < total) {
+            return res.status(400).json({ mensagem: 'Saldo insuficiente para transferência.' });
         }
 
+        senderAccount.balance -= total;
         receiverAccount.balance += value;
 
         const transaction = {
@@ -137,7 +129,7 @@ const transfer = async (req, res) => {
                 accountId: receiverAccount.id,
                 type: receiverAccount.type
             },
-            type: transferType
+            type: 'transferência externa'
         };
 
         data.transactions.push(transaction);
@@ -145,8 +137,7 @@ const transfer = async (req, res) => {
         await fs.writeFile(dbPath, JSON.stringify(data, null, 2));
 
         return res.status(200).json({
-            mensagem: `Transferência de ${formatCurrency(value)} realizada com sucesso.`,
-            tipo: transferType,
+            mensagem: `Transferência externa de ${formatCurrency(value)} realizada com sucesso.`,
             taxa: formatCurrency(fee),
             saldo: formatCurrency(senderAccount.balance)
         });
@@ -159,5 +150,5 @@ const transfer = async (req, res) => {
 module.exports = {
     deposit,
     withdrawal,
-    transfer,
+    transferExternal
 };

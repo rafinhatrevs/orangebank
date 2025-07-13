@@ -1,3 +1,13 @@
+const isValidAccountType = (type) => {
+    return type === 'corrente' || type === 'investimento';
+};
+
+const isValidValue = (value) => {
+    const numericValue = Number(value);
+
+    return !isNaN(numericValue) && numericValue > 0 ? numericValue : null;
+};
+
 const accountData = (req, res, next) => {
     const { type } = req.body;
 
@@ -5,7 +15,7 @@ const accountData = (req, res, next) => {
         return res.status(400).json({ mensagem: 'Informe o tipo de conta.' });
     }
 
-    if (type !== 'corrente' && type !== 'investimento') {
+    if (!isValidAccountType(type)) {
         return res.status(400).json({ mensagem: 'Informe um tipo de conta válido.' });
     }
 
@@ -14,51 +24,84 @@ const accountData = (req, res, next) => {
 
 const depositData = (req, res, next) => {
     const { value } = req.body;
+    const numericValue = isValidValue(value);
 
     if (!value) {
         return res.status(400).json({ mensagem: 'Informe o valor.' });
     }
 
-    if (value <= 0) {
+    if (!numericValue) {
         return res.status(400).json({ mensagem: 'Informe um valor válido.' });
     }
+
+    req.body.value = numericValue;
 
     next();
 };
 
 const withdrawalData = (req, res, next) => {
     const { value } = req.body;
+    const numericValue = isValidValue(value);
 
     if (!value) {
         return res.status(400).json({ mensagem: 'Informe o valor.' });
     }
 
-    if (value <= 0) {
+    if (!numericValue) {
         return res.status(400).json({ mensagem: 'Informe um valor válido.' });
     }
+
+    req.body.value = numericValue;
 
     next();
 };
 
-const transferData = (req, res, next) => {
+const transferInternalData = (req, res, next) => {
+    const { value, senderType, receiverType } = req.body;
+
+    if (!value || !senderType || !receiverType) {
+        return res.status(400).json({ mensagem: 'Preencha todos os campos.' });
+    }
+
+    const numericValue = isValidValue(value);
+
+    if (!numericValue) {
+        return res.status(400).json({ mensagem: 'Informe um valor válido.' });
+    }
+
+    if (!isValidAccountType(senderType)) {
+        return res.status(400).json({ mensagem: 'Informe um tipo de conta de origem válido.' });
+    }
+
+    if (!isValidAccountType(receiverType)) {
+        return res.status(400).json({ mensagem: 'Informe um tipo de conta de destino válido.' });
+    }
+
+    req.body.value = numericValue;
+
+    next();
+};
+
+const transferExternalData = (req, res, next) => {
+    const { userId } = req.params;
     const { value, receiverId, senderType, receiverType } = req.body;
 
     if (!value || !receiverId || !senderType || !receiverType) {
         return res.status(400).json({ mensagem: 'Preencha todos os campos.' });
     }
 
-    const numericValue = Number(value);
+    const numericValue = isValidValue(value);
 
-    if (isNaN(numericValue) || numericValue <= 0) {
+    if (!numericValue) {
         return res.status(400).json({ mensagem: 'Informe um valor válido.' });
     }
 
-    if (senderType !== 'corrente' && senderType !== 'investimento') {
-        return res.status(400).json({ mensagem: 'Informe um tipo de conta de origem válido.' });
+    if (senderType !== 'corrente' || receiverType !== 'corrente') {
+        return res.status(400).json({ mensagem: 'Transferências externas só são permitidas entre contas correntes.' });
     }
 
-    if (receiverType !== 'corrente' && receiverType !== 'investimento') {
-        return res.status(400).json({ mensagem: 'Informe um tipo de conta de destino válido.' });
+    if (userId === receiverId) {
+        return res.status(400).json({ mensagem: 'Para transferências internas use o endpoint apropriado.' });
     }
 
     req.body.value = numericValue;
@@ -70,5 +113,6 @@ module.exports = {
     accountData,
     depositData,
     withdrawalData,
-    transferData
+    transferInternalData,
+    transferExternalData
 };

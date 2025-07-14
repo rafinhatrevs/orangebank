@@ -109,10 +109,35 @@ const transferExternalData = (req, res, next) => {
     next();
 };
 
+const buyAssetData = (req, res, next) => {
+    const { ticker, type, amount, unitPrice } = req.body;
+
+    if (!ticker || !type || !amount || !unitPrice) {
+        return res.status(400).json({ mensagem: 'Preencha todos os campos.' });
+    }
+
+    const numericAmount = isValidValue(amount);
+    const numericUnitPrice = isValidValue(unitPrice);
+
+    if (!numericAmount) {
+        return res.status(400).json({ mensagem: 'Informe uma quantidade válida.' });
+    }
+
+    if (!numericUnitPrice) {
+        return res.status(400).json({ mensagem: 'Informe um valor unitário válido.' });
+    }
+
+    req.body.amount = numericAmount;
+    req.body.unitPrice = numericUnitPrice;
+
+    next();
+};
+
 module.exports = {
     accountData,
     depositData,
     withdrawalData,
     transferInternalData,
-    transferExternalData
+    transferExternalData,
+    buyAssetData,
 };
